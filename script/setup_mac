@@ -75,8 +75,8 @@ if [ -n "$RUNNING_PID" ]; then
 else
   echo "Puma is in its cage ready to be released"
 fi
-
-echo "Setting Puma free"
+echo
+echo "Setting a new Puma free"
 echo
 #start puma in the background
 bundle exec puma &
@@ -88,7 +88,7 @@ REQUEST=$(curl -I http://localhost:9292  2> /dev/null | grep HTTP/1.1 | awk {'$2
 #hang out until puma is accepting request so we do not redirect to an error
 echo "Puma is being a little sluggish please wait"
 while [ "$REQUEST" != "200" ]; do
-  echo -n "*"  #put a tick mark to let us know it is still working
+  echo -n "* "  #put a tick mark to let us know it is still working
   sleep 1s
   # check again
   REQUEST=$(curl -I http://localhost:9292 2> /dev/null | grep HTTP/1.1 | awk {'print $2'})
