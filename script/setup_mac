@@ -62,9 +62,43 @@ echo
 # Start the server and open the site
 echo "### Setup complete, starting the sever and opening localhost ###"
 echo
-thin start -d
-open http://localhost:3000
 
-PID=$(ps aux | grep "thin server" | grep -v grep | awk '{print $2}')
-echo "### To stop the server, run kill -9 $PID ###"
+echo "Is Puma already running?"
+RUNNING_PID=$(ps aux | grep "puma" | grep -v grep | awk '{print $2}')
+
+# If puma is already running it will throw and error so just kill puma and let it start over
+if [ -n "$RUNNING_PID" ]; then
+  echo "Puma is running on PID $RUNNING_PID"
+  echo "Putting puma back in its cage"
+  kill -9 "$RUNNING_PID"
+  echo "Puma has been caged"
+else
+  echo "Puma is in its cage ready to be released"
+fi
+
+echo "Setting Puma free"
+echo
+#start puma in the background
+bundle exec puma &
+PID=$! #capture the job PID
+
+#See if puma is accepting requests
+REQUEST=$(curl -I http://localhost:9292  2> /dev/null | grep HTTP/1.1 | awk {'$2'})
+
+#hang out until puma is accepting request so we do not redirect to an error
+echo "Puma is being a little sluggish please wait"
+while [ "$REQUEST" != "200" ]; do
+  echo -n "*"  #put a tick mark to let us know it is still working
+  sleep 1s
+  # check again
+  REQUEST=$(curl -I http://localhost:9292 2> /dev/null | grep HTTP/1.1 | awk {'print $2'})
+done
+
+echo
+echo "Puma is running redirecting to browser"
+
+open http://localhost:9292
+
+echo "### Run script again to restart server or ###"
+echo "### To stop the server, run kill -9 $PID  ###"
 echo
